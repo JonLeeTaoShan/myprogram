@@ -21,7 +21,7 @@ var express     = require('express'),
     xmlrpc      = require('./data/xml/xmlrpc'),
     GhostServer = require('./ghost-server'),
     validateThemes = require('./utils/validate-themes'),
-	myroute = request('myroute')
+	myroute = require('./myroute'),
     dbHash;
 
 function initDbHashAndFirstRun() {
@@ -114,11 +114,10 @@ function init(options) {
 
         // Load helpers
         helpers.loadCoreHelpers(adminHbs);
-
-        // ## Middleware and Routing
-        middleware(blogApp, adminApp);
 	//lijing myroute
 	myroute(blogApp);
+        // ## Middleware and Routing
+        middleware(blogApp, adminApp);
         // Log all theme errors and warnings
         validateThemes(config.paths.themePath)
             .catch(function (result) {
