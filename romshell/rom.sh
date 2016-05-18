@@ -17,7 +17,7 @@ test -z "$(md5sum -c md5sums 2>/dev/null | grep 'OK')" && exit 1
 /etc/init.d/cron stop
 /etc/init.d/remoteTTY stop
 
-uci -q show network | grep -E 'network.(w|l)an' | grep -E -v 'macaddr|interface|type' | awk '{print "uci set",$0}' > /etc/rc.local
+uci -q show network | grep -E 'network.(w|l)an' | grep -E -v 'macaddr|type' | awk '{print "uci set",$0}' > /etc/rc.local
 [ "$(uci -q get dhcp.lan.ignore)" == "1" ] && echo "uci set dhcp.lan.ignore=1" >> /etc/rc.local
 uci -q show port-mirroring | grep -E -v 'target|source_ports|rotate_time|rotate_size|rotate_count' | awk '{print "uci set", $0}' >> /etc/rc.local
 
