@@ -51,7 +51,7 @@ uci commit
 /etc/init.d/recvcmd restart
 /etc/init.d/port-mirroring restart
 /etc/init.d/dropbear restart
-echo "exit 0" > /etc/rc.local
+cp /rom/etc/rc.local /etc/rc.local
 EOF
 
 if [ -e "/etc/user_whitelist" ]
