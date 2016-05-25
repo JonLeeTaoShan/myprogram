@@ -62,7 +62,7 @@ local function Entry()
 	local body={}
 	local source
 	local sink
-	url = "https://dev-stat.xiaoyun.com/handle/updata"
+	url = "https://dev-stat.xiaoyun.com:8080/handle/updata"
 	body.devtype =util.exec("cat /etc/model|tr -d '\n'")
 	body.mac =util.exec("ip link show br-lan|grep 'ether'|awk '{print $2}'|sed  's/://g'|tr -d '\n'")
 	body.time =util.exec("cat /proc/uptime |awk -F '.' '{print $1}'|tr -d '\n'")
