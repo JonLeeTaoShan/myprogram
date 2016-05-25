@@ -74,6 +74,7 @@ local function Entry()
 	body.mem=util.exec("free |awk '{print $3,$2}'|sed -n '2p'|tr ' ' '/'|tr -d '\n'")
 	body.cdevlist=getssidListdev()
 	body.cpu=util.exec("top -n 1 -b|grep CPU:|grep -v grep |awk  '{printf(\"%s:%s,%s:%s,%s:%s,%s:%s,%s:%s,%s:%s,%s:%s\\n\",$3,$2,$5,$4,$7,$6,$9,$8,$11,$10,$13,$12,$15,$14);}'|tr -d '\n'")
+	body.bandwidth=json.decode(util.exec("cat /tmp/bandwidth.data ||echo nil")	)
 	local bodyjson = json.encode(body)
 	local one,code,headers,status = https.request{
 		url = url,
