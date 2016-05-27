@@ -10,8 +10,11 @@ var 	config = require('./config'),
 	path            = require('path'),
 	url      = require('url'),
 	offlineByMacAPI =  require('./outputAPI').offlineByMacAPI,
+	testdataname=  require('./outputAPI').testdataname,
 	client;
 	var dataCollection; 
+	var databaseuser;
+	var databasepasswd;
 function dataCollection(config)
 {
 	var rootPath=config.rootPath;
@@ -31,7 +34,7 @@ function sendEmailTousers(config,req)
 	}
 	else
 		req.query.limit="0,100"
-	var cmdStr =util.format("mysql -uroot -pw2482167 -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) limit %d,%d;'  -H",fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
+	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
 	exec(cmdStr,
 		{
 			encoding: 'utf8',
@@ -86,6 +89,9 @@ function connectdatebase(config)
 	if (database.client != 'mysql')
 		return -1;
 	//console.log(database);
+	client.query("SET character_set_client=utf8,character_set_connection=utf8;");
+	databaseuser = database.connection.user;
+	databasepasswd = database.connection.password;
 	return 0;
 	  
 	client.connect(function(error, results) {
@@ -130,7 +136,6 @@ function update(req,res)
 							if(error) 
 							{
 								console.log("ClientReady Error: " + error.message);
-								client.end();
 								return;
 							}
 
@@ -139,7 +144,6 @@ function update(req,res)
 								function selectCb(error, results,fields) {
 								      if(error) {
 								        console.log("ClientReady Error: " + error.message);
-								        client.end();
 								        return;
 								      }
 								      console.log('Inserted: ' + results.affectedRows + ' row.');
@@ -171,7 +175,6 @@ function update(req,res)
 											function selectCb(error, results,fields) {
 											      if(error) {
 											        console.log("ClientReady Error: " + error.message);
-											        client.end();
 											        return;
 											      }
 												console.log('dev_upload_offline_tb Inserted: ' + results.affectedRows + ' row.');
@@ -184,7 +187,6 @@ function update(req,res)
 											function selectCb(error, results,fields) {
 											      if(error) {
 											        console.log("ClientReady Error: " + error.message);
-											        client.end();
 											        return;
 											      }
 												console.log('dev_upload_offline_tb Inserted: ' + results.affectedRows + ' row.');
@@ -228,7 +230,7 @@ function updategeterror(req,res)
 	}
 	else
 		req.query.limit="0,100"
-	var cmdStr =util.format("mysql -uroot -pw2482167 -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) limit %d,%d;'  -H",fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
+	var cmdStr =util.format("mysql -u%s-p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
 	exec(cmdStr,
 		{
 			encoding: 'utf8',
@@ -295,6 +297,15 @@ function testofflineByMac(req,res)
 		}
 	)
 }
+function getDatabassInfo()
+{
+	return databaseuser,databasepasswd;
+}
+function mytest(req,res)
+{
+	testdataname(client);
+	res.send("testdataname test");
+}
 function myroute (app)
 {
 	dataCollection= eval("config."+(process.env.NODE_ENV) +".dataCollection");
@@ -303,6 +314,8 @@ function myroute (app)
 	app.get('/handle/updategeterror',updategeterror);
 	app.get('/handle/sendEmailTousers',sendEmail);
 	app.get('/handle/testofflineByMac',testofflineByMac);
+	app.get('/handle/testdataname',mytest);
+	
 	app.use('/handle/public',serveStatic(
         path.join(dataCollection.rootPath, '/public'),
         {maxAge: util.ONE_HOUR_MS, fallthrough: false}
@@ -312,3 +325,4 @@ function myroute (app)
 	//console.log(process.config);
 }
 module.exports = myroute;
+module.exports.getDatabassInfo = getDatabassInfo;
