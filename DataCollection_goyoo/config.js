@@ -28,7 +28,7 @@ config = {
             connection: {
             	host     : '127.0.0.1',
    		 user     : 'root',
-  		 password : 'w2482167',
+  		 password : '123456',
    		 database : 'ghost_db',
    		 charset  : 'utf8'
 		
@@ -78,7 +78,7 @@ config = {
             connection: {
             	host     : '127.0.0.1',
    		 user     : 'root',
-  		 password : 'w2482167',
+  		 password : '123456',
    		 database : 'ghost_db',
    		 charset  : 'utf8'
 		
@@ -86,7 +86,7 @@ config = {
             debug: false
         },
   dataCollection:{
-		rootPath:'/home/lijing/mygit/myprogram/DataCollection_goyoo',
+		rootPath:'/home/lijing/myprogram/DataCollection_goyoo',
 		sendToEmail:[
 			{
 				to:'lijinga@goyoo.com',
