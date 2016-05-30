@@ -14,9 +14,9 @@ function getStringbyhttp1(uri,callback)
 	})
 
 }
-function autoCreatShopTB(client)
+function autoCreatShopTB(query)
 {
-	client.query("DROP TABLE IF EXISTS 'upload_db'.`shop_xibei`;",
+	query("DROP TABLE IF EXISTS 'upload_db'.`shop_xibei`;",
 		function(error,results,fields)
 		{
 			if(error)
@@ -32,7 +32,7 @@ function autoCreatShopTB(client)
 						if(results[i].table_name)
 						{
 							console.log("find table_name=%s id=%d  ",results[i].table_name,i);
-							client.query(util.format("CREATE TABLE `%s` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT,`name` char(100) DEFAULT NULL,`shopID` varchar(48) CHARACTER SET latin1 DEFAULT NULL,`macList` text CHARACTER SET latin1,`adminPhone` varchar(20) CHARACTER SET latin1 DEFAULT NULL,`adminEmail` text CHARACTER SET latin1,PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;",results[i].table_name),
+							query(util.format("CREATE TABLE `%s` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT,`name` char(100) DEFAULT NULL,`shopID` varchar(48) CHARACTER SET latin1 DEFAULT NULL,`macList` text CHARACTER SET latin1,`adminPhone` varchar(20) CHARACTER SET latin1 DEFAULT NULL,`adminEmail` text CHARACTER SET latin1,PRIMARY KEY (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;",results[i].table_name),
 								function(error,results,fields)
 								{
 									if(error)

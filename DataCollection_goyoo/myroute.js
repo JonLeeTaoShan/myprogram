@@ -9,12 +9,15 @@ var 	config = require('./config'),
 	serveStatic     = require('express').static,
 	path            = require('path'),
 	url      = require('url'),
+	mysql=	require('mysql'),
 	offlineByMacAPI =  require('./outputAPI').offlineByMacAPI,
 	testdataname=  require('./outputAPI').testdataname,
-	client;
+//	client;
 	var dataCollection; 
 	var databaseuser;
 	var databasepasswd;
+	var midurl
+	var query;
 function dataCollection(config)
 {
 	var rootPath=config.rootPath;
@@ -71,8 +74,30 @@ function sendEmailTousers(config,req)
 
 function connectdatebase(config)
 {
+
+
 	var database = eval("config."+(process.env.NODE_ENV) +".database");
-	client = new require('mysql').createConnection(
+	var pool = mysql.createPool({
+			host :database.connection.host,
+			user :database.connection.user,
+			password : database.connection.password,
+			database : 'upload_db',
+			charset : database.connection.charset
+		});
+
+	query=function(sql,callback){
+	    pool.getConnection(function(err,conn){
+	        if(err){
+	            callback(err,null,null);
+	        }else{
+	            conn.query(sql,function(qerr,vals,fields){
+	                conn.release();
+	                callback(qerr,vals,fields);
+	            });
+	        }
+	    });
+	};
+	/*client = new mysql.createConnection(
 		{
 			host :database.connection.host,
 			user :database.connection.user,
@@ -80,7 +105,7 @@ function connectdatebase(config)
 			database : 'upload_db',
 			charset : database.connection.charset
 		}
-	);
+	);*/
 /*	console.log("host=%s,user=%s,password=%s,database=%s,charset=%s",database.connection.host,
 			database.connection.user,
 			database.connection.password,
@@ -89,18 +114,18 @@ function connectdatebase(config)
 	if (database.client != 'mysql')
 		return -1;
 	//console.log(database);
-	client.query("SET character_set_client=utf8,character_set_connection=utf8;");
+	//client.query("SET character_set_client=utf8,character_set_connection=utf8;");
 	databaseuser = database.connection.user;
 	databasepasswd = database.connection.password;
 	return 0;
 	  
-	client.connect(function(error, results) {
+	/*client.connect(function(error, results) {
 	  if(error) {
 	    console.log('Connection Error: ' + error.message);
 	    return;
 	  }
 	  console.log('Connected to MySQL');
-	});
+	});*/
 }
 function update(req,res)
 {
@@ -129,7 +154,7 @@ function update(req,res)
 				//	post.devtype,post.mac,post.time ,JSON.stringify(post.propid) ,post.wandev ,JSON.stringify(post.wandev) ,post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others);
 			//	console.log('INSERT INTO dev_upload_tb SET devtype=\'%s\',nowtime=NOW(), mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
 				//	post.devtype,post.mac,post.time ,JSON.stringify(post.propid) ,JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others);
-				client.query(  
+				query(  
 					  util.format("select * from upload_db.dev_upload_tb where nowtime = (select max(nowtime) from upload_db.dev_upload_tb where mac = %s) and mac = %s;",parseInt("0x"+post.mac, 16),parseInt("0x"+post.mac, 16)),  
 						function selectCb(error, results, fields) 
 						{  
@@ -139,7 +164,7 @@ function update(req,res)
 								return;
 							}
 
-							client.query(util.format('INSERT INTO dev_upload_tb SET bandwidth=\'%s\',devtype=\'%s\',nowtime=\'%s\', mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
+							query(util.format('INSERT INTO dev_upload_tb SET bandwidth=\'%s\',devtype=\'%s\',nowtime=\'%s\', mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
 									JSON.stringify(post.bandwidth),post.devtype,now,parseInt("0x"+post.mac, 16),post.time ,JSON.stringify(post.propid) ,JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others),
 								function selectCb(error, results,fields) {
 								      if(error) {
@@ -170,7 +195,7 @@ function update(req,res)
 									{
 										console.log('mac = %s updata statue is error!last time is %s,timestamp1=%d, lasttime=%d ',results[0].mac.toString(16),results[0].nowtime,timestamp1 ,lasttime);
 										//把最近一次有效数据存入数据库dev_upload_offline_tb errtype=error
-										client.query(util.format('REPLACE INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'error\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
+										query(util.format('REPLACE INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'error\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
 												JSON.stringify(results[0].bandwidth),now,results[0].id,results[0].devtype,moment(Date.parse(results[0].nowtime)).format('YYYY-MM-DD HH:mm:ss'),results[0].mac,results[0].time ,results[0].propid,results[0].wandev,results[0].landev,results[0].mem ,results[0].cdevlist ,results[0].softversion ,results[0].others),
 											function selectCb(error, results,fields) {
 											      if(error) {
@@ -182,7 +207,7 @@ function update(req,res)
 											}
 										);
 										//把本次正常状态存入数据库dev_upload_offline_tb，errtype=restart .同时id=0.
-										client.query(util.format('REPLACE INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'restart\', erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
+										query(util.format('REPLACE INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'restart\', erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
 												JSON.stringify(post.bandwidth),now,0,post.devtype,now,parseInt("0x"+post.mac, 16),post.time ,JSON.stringify(post.propid),JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others),
 											function selectCb(error, results,fields) {
 											      if(error) {
@@ -250,8 +275,8 @@ function updategeterror(req,res)
 		myhtml('html').append(myhead.html());
 		myhtml('html').append(mytable.html());
 		myhtml('head').append('<title>Get error data list </title>');
-		myhtml('head').append('<link href="/handle/public/css/mytable.css" rel="stylesheet" type="text/css" />');
-		myhtml('html').append('<script src="/handle/public/js/jquery-2.1.4.min.js"></script>');
+		myhtml('head').append('<link href="/'+midurl+'/public/css/mytable.css" rel="stylesheet" type="text/css" />');
+		myhtml('html').append('<script src="/'+midurl+'/public/js/jquery-2.1.4.min.js"></script>');
 		myhtml('html').append('<script>\n$(function(){$("tr:even").addClass("evenrowcolor");\n$("tr:odd").addClass("oddrowcolor"); });</script>');
 		res.send(myhtml.html());
 	    }
@@ -291,7 +316,7 @@ function sendEmail(req,res)
 }
 function testofflineByMac(req,res)
 {
-	offlineByMacAPI(client,req.query.mac,req.query.fromnow,function(resStr)
+	offlineByMacAPI(query,req.query.mac,req.query.fromnow,function(resStr)
 		{
 			res.send(resStr);
 		}
@@ -303,15 +328,15 @@ function getDatabassInfo()
 }
 function mytest(req,res)
 {
-	testdataname(client);
+	testdataname(query);
 	res.send("testdataname test");
 }
 function myroute (app)
 {
 	dataCollection= eval("config."+(process.env.NODE_ENV) +".dataCollection");
-	var midurl = eval("config."+(process.env.NODE_ENV) +".server.midurl");
+	midurl = eval("config."+(process.env.NODE_ENV) +".server.midurl");
 
-	app.post('/handle/updata',update);
+	app.post('/'+midurl+'/updata',update);
 	
 	//url: /handle/updategeterror?fromnow=0&limit=1,20
 	app.get('/'+midurl+'/updategeterror',updategeterror);
