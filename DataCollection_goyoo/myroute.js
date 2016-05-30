@@ -11,7 +11,7 @@ var 	config = require('./config'),
 	url      = require('url'),
 	mysql=	require('mysql'),
 	offlineByMacAPI =  require('./outputAPI').offlineByMacAPI,
-	testdataname=  require('./outputAPI').testdataname,
+	testdataname=  require('./outputAPI').testdataname;
 //	client;
 	var dataCollection; 
 	var databaseuser;
