@@ -86,7 +86,7 @@ config = {
             debug: false
         },
   dataCollection:{
-		rootPath:'/home/lijing/web_serber_www/DataCollection',
+		rootPath:'/home/lijing/mygit/myprogram/DataCollection_goyoo',
 		sendToEmail:[
 			{
 				to:'lijinga@goyoo.com',
