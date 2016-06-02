@@ -97,6 +97,7 @@ local function Entry()
   	}
        
 	--print("code="..code..",headers="..json.encode(headers)..",res="..json.encode(res))
+	return code
 end
 local res = 0            
 local i=10                     
