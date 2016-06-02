@@ -11,7 +11,10 @@ var 	config = require('./config'),
 	url      = require('url'),
 	mysql=	require('mysql'),
 	offlineByMacAPI =  require('./outputAPI').offlineByMacAPI,
-	testdataname=  require('./outputAPI').testdataname;
+	testdataname=  require('./outputAPI').testdataname,
+	offlineByShopIDAPI=  require('./outputAPI').offlineByShopIDAPI,
+	offlineByShopIDAPIChin=  require('./outputAPI').offlineByShopIDAPIChin,
+	autoCreatandInsertShopTB=  require('./autoJob').autoCreatandInsertShopTB;
 //	client;
 	var dataCollection; 
 	var databaseuser;
@@ -37,7 +40,7 @@ function sendEmailTousers(config,req)
 	}
 	else
 		req.query.limit="0,100"
-	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
+	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by mac DESC ,nowtime ASC limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
 	exec(cmdStr,
 		{
 			encoding: 'utf8',
@@ -255,7 +258,7 @@ function updategeterror(req,res)
 	}
 	else
 		req.query.limit="0,100"
-	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
+	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by mac DESC ,nowtime ASC limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
 	exec(cmdStr,
 		{
 			encoding: 'utf8',
@@ -331,6 +334,22 @@ function mytest(req,res)
 	testdataname(query);
 	res.send("testdataname test");
 }
+function flashShopTB(req,res)
+{
+	autoCreatandInsertShopTB(query);
+	res.send("flashShopTB succeed");
+}
+function getDevstatByShopID(req,res)
+{
+	offlineByShopIDAPIChin(query,req.query.shoptb,req.query.shopid,req.query.fromnow,
+		function (resString)
+		{
+			res.send(resString);
+		}
+	);
+	//res.send("getDevstatByShopID succeed");
+
+}
 function myroute (app)
 {
 	dataCollection= eval("config."+(process.env.NODE_ENV) +".dataCollection");
@@ -343,7 +362,9 @@ function myroute (app)
 	app.get('/'+midurl+'/sendEmailTousers',sendEmail);
 	app.get('/'+midurl+'/testofflineByMac',testofflineByMac);
 	app.get('/'+midurl+'/testdataname',mytest);
-	
+	app.get('/'+midurl+'/flashShopTB',flashShopTB);
+	app.get('/'+midurl+'/getDevstat',getDevstatByShopID);
+
 	app.use('/'+midurl+'/public',serveStatic(
         path.join(dataCollection.rootPath, '/public'),
         {maxAge: util.ONE_HOUR_MS, fallthrough: false}

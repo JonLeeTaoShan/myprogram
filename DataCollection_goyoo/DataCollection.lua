@@ -62,6 +62,8 @@ local function Entry()
 	local body={}
 	local source
 	local sink
+	--防止高并发
+	util.exec("while [ 1 ] ;do [ `expr $(date +%s) % 6` -eq `expr $((0x$(ip link show br-lan|grep 'ether'|awk '{print $2}'|awk -F':' '{print $6}'))) % 6` ]&& break;sleep 1; done")
 	url = "https://dev-stat.xiaoyun.com:8080/handle/updata"
 	body.devtype =util.exec("cat /etc/model|tr -d '\n'")
 	body.mac =util.exec("ip link show br-lan|grep 'ether'|awk '{print $2}'|sed  's/://g'|tr -d '\n'")
@@ -96,4 +98,12 @@ local function Entry()
        
 	--print("code="..code..",headers="..json.encode(headers)..",res="..json.encode(res))
 end
-Entry()
+local res = 0            
+local i=10                     
+while (i > 0 and res ~= 200) 
+do                               
+        res = Entry()      
+        print(res)                     
+        i = i -1               
+        nixio.nanosleep(1, 0)    
+end 
