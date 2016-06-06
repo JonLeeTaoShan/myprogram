@@ -14,7 +14,8 @@ var 	config = require('./config'),
 	testdataname=  require('./outputAPI').testdataname,
 	offlineByShopIDAPI=  require('./outputAPI').offlineByShopIDAPI,
 	offlineByShopIDAPIChin=  require('./outputAPI').offlineByShopIDAPIChin,
-	autoCreatandInsertShopTB=  require('./autoJob').autoCreatandInsertShopTB;
+	autoCreatandInsertShopTB=  require('./autoJob').autoCreatandInsertShopTB,
+	handlelastOnlineByShopID = require('./outputAPI').handlelastOnlineByShopID;
 //	client;
 	var dataCollection; 
 	var databaseuser;
@@ -327,7 +328,9 @@ function testofflineByMac(req,res)
 }
 function getDatabassInfo()
 {
-	return databaseuser,databasepasswd;
+	//return {databaseuser:databaseuser,databasepasswd:databasepasswd};
+	return "hah";
+
 }
 function mytest(req,res)
 {
@@ -350,6 +353,15 @@ function getDevstatByShopID(req,res)
 	//res.send("getDevstatByShopID succeed");
 
 }
+function lastOnlineByShopID(req,res)
+{
+	handlelastOnlineByShopID(query,req.query.shoptb,req.query.shopid,
+		function (resString)
+		{
+			res.send(resString);
+		}
+	)
+}
 function myroute (app)
 {
 	dataCollection= eval("config."+(process.env.NODE_ENV) +".dataCollection");
@@ -364,7 +376,7 @@ function myroute (app)
 	app.get('/'+midurl+'/testdataname',mytest);
 	app.get('/'+midurl+'/flashShopTB',flashShopTB);
 	app.get('/'+midurl+'/getDevstat',getDevstatByShopID);
-
+	app.get('/'+midurl+'/lastOnlineByShopID',lastOnlineByShopID);
 	app.use('/'+midurl+'/public',serveStatic(
         path.join(dataCollection.rootPath, '/public'),
         {maxAge: util.ONE_HOUR_MS, fallthrough: false}
