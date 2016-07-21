@@ -15,7 +15,8 @@ var 	config = require('./config'),
 	offlineByShopIDAPI=  require('./outputAPI').offlineByShopIDAPI,
 	offlineByShopIDAPIChin=  require('./outputAPI').offlineByShopIDAPIChin,
 	autoCreatandInsertShopTB=  require('./autoJob').autoCreatandInsertShopTB,
-	handlelastOnlineByShopID = require('./outputAPI').handlelastOnlineByShopID;
+	handlelastOnlineByShopID = require('./outputAPI').handlelastOnlineByShopID,
+	getShoptbandShopidbyname= require('./outputAPI').getShoptbandShopidbyname;
 //	client;
 	var dataCollection; 
 	var databaseuser;
@@ -344,7 +345,10 @@ function flashShopTB(req,res)
 }
 function getDevstatByShopID(req,res)
 {
-	offlineByShopIDAPIChin(query,req.query.shoptb,req.query.shopid,req.query.fromnow,
+	var fromnow=0;
+	if(req.query.fromnow)
+			fromnow = req.query.fromnow;
+	offlineByShopIDAPIChin(query,req.query.shoptb,req.query.shopid,fromnow,
 		function (resString)
 		{
 			res.send(resString);
@@ -353,6 +357,18 @@ function getDevstatByShopID(req,res)
 	//res.send("getDevstatByShopID succeed");
 
 }
+function lastOnlineByname(req,res)
+{
+	if(req.query.Chanelname==null||req.query.Shopname==null)
+		res.send("input req err!");
+	getShoptbandShopidbyname(query,req.query.Chanelname,req.query.Shopname,
+		function (tbname,shopid)
+		{
+			res.send(util.format("MY:%s,%s",tbname,shopid));
+		}
+	)
+}
+
 function lastOnlineByShopID(req,res)
 {
 	handlelastOnlineByShopID(query,req.query.shoptb,req.query.shopid,
@@ -377,6 +393,7 @@ function myroute (app)
 	app.get('/'+midurl+'/flashShopTB',flashShopTB);
 	app.get('/'+midurl+'/getDevstat',getDevstatByShopID);
 	app.get('/'+midurl+'/lastOnlineByShopID',lastOnlineByShopID);
+	app.get('/'+midurl+'/lastOnlineByname',lastOnlineByname);
 	app.use('/'+midurl+'/public',serveStatic(
         path.join(dataCollection.rootPath, '/public'),
         {maxAge: util.ONE_HOUR_MS, fallthrough: false}

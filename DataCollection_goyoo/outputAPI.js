@@ -140,7 +140,8 @@ function offlineByShopIDAPI(query,shopTB,shopID,fromnow,callback)
 				console.log("offlineByShopAPI length=%d",length);
 				return;
 			}
-			var macList=results[0].macList.substring(1,results[0].macList.length-1).split(',');
+			//console.log(results[0].macList);
+			var macList=results[0].macList.substring(1,results[0].macList.length).split(',');
 			var maclength = macList.length;
 			var nn =0;
 			var macRes =new Array();
@@ -177,6 +178,7 @@ function  getVisitorsByShopID(father,shopid,fromnow)
 }
 function offlineByShopIDAPIChin(query,shopTB,shopID,fromnow,callback)
 {
+	var 	midurl = eval("config."+(process.env.NODE_ENV) +".server.midurl");
 	offlineByShopIDAPI(query,shopTB,shopID,fromnow,
 		function(macRes)
 		{
@@ -206,7 +208,7 @@ function offlineByShopIDAPIChin(query,shopTB,shopID,fromnow,callback)
 				var to	=new Date();
 				from.add({days:-(parseInt(fromnow)+1)});
 				to.add({days:-fromnow});
-				callback(util.format("(%d)wifi小云设备（%s 至 %s）报告：当前总的小云设备有%d台，活跃在线率为:%d%%%s长时间不在线%d台,分别为%s当日认证人数为400人<a target='_blank' href='http://dev-stat.xiaoyun.com/%s/getDevstat?shoptb=%s&shopid=%s'>http://dev-stat.xiaoyun.com/%s/getDevstat?shoptb=%s&shopid=%s</a> 进行查看。在线快速排查手册<a target='_blank' href='http://dev-stat.xiaoyun.com/getdoc?id=1324124321'>http://dev-stat.xiaoyun.com/getdoc?id=1324124321</a>.技术支持电话：333333333 ,邮箱：abc@goyoo.com",name,moment(from).format('YYYY-MM-DD HH:mm:ss'),moment(to).format('YYYY-MM-DD HH:mm:ss'),length,((1-totalsecond/(3600*24*length))*100).toFixed(1),perDev,errDevcnt,errDev));
+				callback(util.format("(%s)wifi小云设备（%s 至 %s）报告：当前总的小云设备有%d台，活跃在线率为:%d%%%s长时间不在线%d台,分别为%s当日认证人数为400人.详情<a target='_blank' href='http://dev-stat.xiaoyun.com/%s/lastOnlineByShopID?shoptb=%s&shopid=%s'>http://dev-stat.xiaoyun.com/%s/lastOnlineByShopID?shoptb=%s&shopid=%s</a> 进行查看。在线快速排查手册<a target='_blank' href='http://dev-stat.xiaoyun.com/getdoc?id=1324124321'>http://dev-stat.xiaoyun.com/getdoc?id=1324124321</a>.技术支持电话：333333333 ,邮箱：abc@goyoo.com",name,moment(from).format('YYYY-MM-DD HH:mm:ss'),moment(to).format('YYYY-MM-DD HH:mm:ss'),length,((1-totalsecond/(3600*24*length))*100).toFixed(1),perDev,errDevcnt,errDev,midurl,shopTB,shopID,midurl,shopTB,shopID));
 
 			}
 		}
@@ -245,7 +247,51 @@ function getMaclistByShopID(query,shopTB,shopID,callback)
 				console.log("offlineByShopAPI length=%d",length);
 				return;
 			}
-			callback(results[0].macList.substring(1,results[0].macList.length-1).split(','));
+			callback(results[0].macList.substring(1,results[0].macList.length).split(','));
+		}
+	)
+}
+function getShoptbandShopidbyname(query,Chanelname,Shopname,callback)
+{
+	query(util.format(" select table_name,channelID  from upload_db.shop_by_channelID where name lile \'%%%s%%\'; ",Chanelname),
+		function selectCb(error, results,fields) 
+		{
+			if(error) {
+				console.log("getShoptbandShopidbyname Error: " + error.message);
+				return;
+			}
+			if(!results)
+			{
+				console.log("getShoptbandShopidbyname results nill");
+				return;
+			}
+			var length=results.length;
+			if(length!=1)
+			{
+				console.log("getShoptbandShopidbyname length=%d",length);
+				return;
+			}
+			query(util.format(" select shopID  from upload_db.%s where name lile \'%%%s%%\'; ",results[0].table_name),
+				function selectCb(error, results,fields) 
+				{
+					if(error) {
+						console.log("getShoptbandShopidbyname Error: " + error.message);
+						return;
+					}
+					if(!results)
+					{
+						console.log("getShoptbandShopidbyname results nill");
+						return;
+					}
+					var length=results.length;
+					if(length!=1)
+					{
+						console.log("getShoptbandShopidbyname length=%d",length);
+						return;
+					}
+					callback(results[0].table_name,results[0].shopID);
+				}
+			)
 		}
 	)
 }
@@ -311,3 +357,4 @@ module.exports.offlineByMacAPI = offlineByMacAPI;
 module.exports.offlineByShopIDAPI = offlineByShopIDAPI;
 module.exports.offlineByShopIDAPIChin = offlineByShopIDAPIChin;
 module.exports.handlelastOnlineByShopID = handlelastOnlineByShopID;
+module.exports.getShoptbandShopidbyname = getShoptbandShopidbyname;
