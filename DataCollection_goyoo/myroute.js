@@ -359,12 +359,17 @@ function getDevstatByShopID(req,res)
 }
 function lastOnlineByname(req,res)
 {
-	if(req.query.Chanelname==null||req.query.Shopname==null)
+	if(req.query.Channelname==null||req.query.Shopname==null)
 		res.send("input req err!");
-	getShoptbandShopidbyname(query,req.query.Chanelname,req.query.Shopname,
+	getShoptbandShopidbyname(query,req.query.Channelname,req.query.Shopname,
 		function (tbname,shopid)
 		{
-			res.send(util.format("MY:%s,%s",tbname,shopid));
+			handlelastOnlineByShopID(query,tbname,shopid,
+				function (resString)
+				{
+					res.send(resString);
+				}
+			)
 		}
 	)
 }

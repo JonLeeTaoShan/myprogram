@@ -251,9 +251,9 @@ function getMaclistByShopID(query,shopTB,shopID,callback)
 		}
 	)
 }
-function getShoptbandShopidbyname(query,Chanelname,Shopname,callback)
+function getShoptbandShopidbyname(query,Channelname,Shopname,callback)
 {
-	query(util.format(" select table_name,channelID  from upload_db.shop_by_channelID where name lile \'%%%s%%\'; ",Chanelname),
+	query(util.format(" select *  from upload_db.shop_by_channelID where name like \'%%%s%%\'; ",Channelname),
 		function selectCb(error, results,fields) 
 		{
 			if(error) {
@@ -271,25 +271,27 @@ function getShoptbandShopidbyname(query,Chanelname,Shopname,callback)
 				console.log("getShoptbandShopidbyname length=%d",length);
 				return;
 			}
-			query(util.format(" select shopID  from upload_db.%s where name lile \'%%%s%%\'; ",results[0].table_name),
+			var rsttable_name = results[0].table_name;
+			query(util.format(" select *  from upload_db.%s where name like \'%%%s%%\'; ",rsttable_name,Shopname),
 				function selectCb(error, results,fields) 
 				{
+
 					if(error) {
-						console.log("getShoptbandShopidbyname Error: " + error.message);
+						console.log("getShoptbandShopidbyname1 Error: " + error.message);
 						return;
 					}
 					if(!results)
 					{
-						console.log("getShoptbandShopidbyname results nill");
+						console.log("getShoptbandShopidbyname1 results nill");
 						return;
 					}
 					var length=results.length;
 					if(length!=1)
 					{
-						console.log("getShoptbandShopidbyname length=%d",length);
+						console.log("getShoptbandShopidbyname1 length=%d",length);
 						return;
 					}
-					callback(results[0].table_name,results[0].shopID);
+					callback(rsttable_name,results[0].shopID);
 				}
 			)
 		}
