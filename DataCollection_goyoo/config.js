@@ -105,7 +105,7 @@ config = {
             host: '127.0.0.1',
             // Port to be passed to node's `net.Server#listen()`, for iisnode set this to `process.env.PORT`
             port: '1122',
-			midurl:'handlel'
+			midurl:'handle'
         },
         // #### Paths
         // Specify where your content directory lives

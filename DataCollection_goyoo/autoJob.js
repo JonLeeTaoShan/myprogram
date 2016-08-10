@@ -180,7 +180,47 @@ function connectdatebase(config)
 	return 0;
 	  
 }
+function scheduleDelDataFromSQL(query)
+{
+	var schedule = require('node-schedule');
+	var rule = new schedule.RecurrenceRule();
+	//00:20:00
+	rule.hour =0;rule.minute =20;rule.second =0;
+	var j = schedule.scheduleJob(rule, function(){
+		console.log("clear SQL: now is %s.",new Date());
+	query(util.format(" DELETE  from upload_db.dev_upload_tb where nowtime < DATE_SUB(now(), INTERVAL 1 MONTH); "),
+		function selectCb(error, results,fields) 
+		{
+			if(error) {
+				console.log("scheduleDelDataFromSQL Error: " + error.message);
+				return;
+			}
+			if(!results)
+			{
+				console.log("scheduleDelDataFromSQL results nill");
+				return;
+			}
+			console.log("clear upload_db.dev_upload_tb SQL done!")
+		});
+	query(util.format(" DELETE  from upload_db.dev_upload_offline_tb where nowtime < DATE_SUB(now(), INTERVAL 3 MONTH); "),
+		function selectCb(error, results,fields) 
+		{
+			if(error) {
+				console.log("scheduleDelDataFromSQL 2 Error: " + error.message);
+				return;
+			}
+			if(!results)
+			{
+				console.log("scheduleDelDataFromSQL 2 results nill");
+				return;
+			}
+			console.log("clear upload_db.dev_upload_offline_tb SQL done!")
+		});
+		autoCreatandInsertShopTB(query);
+	})
+}
 //process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 //connectdatebase(config);
 module.exports.autoCreatandInsertShopTB = autoCreatandInsertShopTB;
+module.exports.scheduleDelDataFromSQL = scheduleDelDataFromSQL;
 module.exports.getStringbyhttp1 =getStringbyhttp1;

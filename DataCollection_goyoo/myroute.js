@@ -15,6 +15,7 @@ var 	config = require('./config'),
 	offlineByShopIDAPI=  require('./outputAPI').offlineByShopIDAPI,
 	offlineByShopIDAPIChin=  require('./outputAPI').offlineByShopIDAPIChin,
 	autoCreatandInsertShopTB=  require('./autoJob').autoCreatandInsertShopTB,
+	scheduleDelDataFromSQL=  require('./autoJob').scheduleDelDataFromSQL,
 	handlelastOnlineByShopID = require('./outputAPI').handlelastOnlineByShopID,
 	getShoptbandShopidbyname= require('./outputAPI').getShoptbandShopidbyname;
 //	client;
@@ -245,7 +246,7 @@ function update(req,res)
 			}
 	)
 }
-function updategeterror(req,res)
+function updateGetError(req,res)
 {
 	var fromnow=0;
 	var length=100;
@@ -287,6 +288,54 @@ function updategeterror(req,res)
 	    }
 	});
 }
+function updateGetAllByMac(req,res)
+{
+	var fromnow=0;
+	var length=100;
+	 var params = url.parse(req.url, true).query;
+	 //length <= 100 ,offset default is 0
+	if(req.query.fromnow)
+		fromnow = req.query.fromnow;
+	if(req.query.limit)
+	{
+		var tmp = (req.query.limit.match(/,\d+/))[0].match(/\d+/)[0];
+		length = tmp>length?length:tmp;
+	}
+	else
+		req.query.limit="0,100"
+	if(req.query.mac==null)
+	{
+		res.send("can't get mac req;");
+		return;
+	}
+	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_tb where mac = %d and nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by nowtime DESC limit %d,%d;'  -H",databaseuser,databasepasswd,parseInt("0x"+req.query.mac.replace(/:/g,''), 16),fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
+	exec(cmdStr,
+		{
+			encoding: 'utf8',
+			timeout: 0,
+			maxBuffer: 5000 * 1024, // д╛хо 200 * 1024
+			killSignal: 'SIGTERM'
+		},
+	 function(err,stdout,stderr){
+	    if(err) {
+	        console.log('get exec api error:'+err);
+	    } else {
+	       // console.log(stdout);
+	       console.log("secceed!");
+		 var myhtml = cheerio.load('<html></html>');
+		 var myhead = cheerio.load('<head></head>');
+		var mytable = cheerio.load(stdout);
+		myhtml('html').append(myhead.html());
+		myhtml('html').append(mytable.html());
+		myhtml('head').append('<title>Get error data list </title>');
+		myhtml('head').append('<link href="/'+midurl+'/public/css/mytable.css" rel="stylesheet" type="text/css" />');
+		myhtml('html').append('<script src="/'+midurl+'/public/js/jquery-2.1.4.min.js"></script>');
+		myhtml('html').append('<script>\n$(function(){$("tr:even").addClass("evenrowcolor");\n$("tr:odd").addClass("oddrowcolor"); });</script>');
+		res.send(myhtml.html());
+	    }
+	});
+}
+
 function sendemail(to,subject,htmlMsg)
 {
 	var transport = nodemailer.createTransport("SMTP", {
@@ -357,7 +406,26 @@ function getDevstatByShopID(req,res)
 	//res.send("getDevstatByShopID succeed");
 
 }
-function lastOnlineByname(req,res)
+function getDevstatByName(req,res)
+{
+	if(req.query.Channelname==null||req.query.Shopname==null)
+		res.send("input req err!");
+	var fromnow=0;
+	if(req.query.fromnow)
+			fromnow = req.query.fromnow;
+	getShoptbandShopidbyname(query,req.query.Channelname,req.query.Shopname,
+		function (tbname,shopid)
+		{
+			offlineByShopIDAPIChin(query,tbname,shopid,fromnow,
+				function (resString)
+				{
+					res.send(resString);
+				}
+			)
+		}
+	)
+}
+function lastOnlineByName(req,res)
 {
 	if(req.query.Channelname==null||req.query.Shopname==null)
 		res.send("input req err!");
@@ -387,24 +455,26 @@ function myroute (app)
 {
 	dataCollection= eval("config."+(process.env.NODE_ENV) +".dataCollection");
 	midurl = eval("config."+(process.env.NODE_ENV) +".server.midurl");
-
 	app.post('/'+midurl+'/updata',update);
 	
 	//url: /handle/updategeterror?fromnow=0&limit=1,20
-	app.get('/'+midurl+'/updategeterror',updategeterror);
+	app.get('/'+midurl+'/updateGetError',updateGetError);
+	app.get('/'+midurl+'/updateGetAllByMac',updateGetAllByMac);
 	app.get('/'+midurl+'/sendEmailTousers',sendEmail);
 	app.get('/'+midurl+'/testofflineByMac',testofflineByMac);
 	app.get('/'+midurl+'/testdataname',mytest);
 	app.get('/'+midurl+'/flashShopTB',flashShopTB);
 	app.get('/'+midurl+'/getDevstat',getDevstatByShopID);
 	app.get('/'+midurl+'/lastOnlineByShopID',lastOnlineByShopID);
-	app.get('/'+midurl+'/lastOnlineByname',lastOnlineByname);
+	app.get('/'+midurl+'/getDevstatByName',getDevstatByName);
+	app.get('/'+midurl+'/lastOnlineByName',lastOnlineByName);
 	app.use('/'+midurl+'/public',serveStatic(
         path.join(dataCollection.rootPath, '/public'),
         {maxAge: util.ONE_HOUR_MS, fallthrough: false}
     ));
 	console.log("This is myroute.");
 	connectdatebase(config);
+	scheduleDelDataFromSQL(query);
 	//console.log(process.config);
 }
 module.exports = myroute;
