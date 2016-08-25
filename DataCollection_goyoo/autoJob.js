@@ -99,8 +99,14 @@ function scheduleDelDataFromSQL(query)
 			console.log("clear upload_db.dev_upload_offline_tb SQL done!")
 		});
 		autoCreatandInsertShopTB(query);
+	});
+	var rule2 = new schedule.RecurrenceRule();
+	//00:50:00
+	rule2.hour =0;rule2.minute =50;rule2.second =0;
+	var jj=schedule.scheduleJob(rule2, function(){
 		scheduleCountEverydayError(query);
-	})
+		}
+	)
 }
 //process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 //connectdatebase(config);
