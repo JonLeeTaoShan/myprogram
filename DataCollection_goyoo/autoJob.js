@@ -8,8 +8,7 @@ var 	config = require('./config'),
 	InsertShopTB = require('./func').InsertShopTB,
 	traversalShopTablesFromChannel =require('./func').traversalShopTablesFromChannel,
 	traversalEveryMacFromShopTables = require('./func').traversalEveryMacFromShopTables,
-	countErrByoneMacEveryday = require('./func').countErrByoneMacEveryday,
-	scheduleCountEverydayError = require('./autoJob').scheduleCountEverydayError
+	countErrByoneMacEveryday = require('./func').countErrByoneMacEveryday
 	;
 function autoCreatandInsertShopTB(query)
 {
@@ -50,7 +49,6 @@ function autoCreatandInsertShopTB(query)
 
 function scheduleCountEverydayError(query)
 {
-	var count=0;
 	traversalEveryMacFromShopTables(query,
 		function(oneShopmacList)
 		{
@@ -58,7 +56,7 @@ function scheduleCountEverydayError(query)
 			for(var i=0;i<macList.length;i++)
 			{
 				countErrByoneMacEveryday(query,macList[i],"upload_db.dev_upload_offline_tb");
-
+				
 			}
 		}
 	)

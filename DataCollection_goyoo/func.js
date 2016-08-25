@@ -196,8 +196,8 @@ function countErrByoneMacEveryday(query,mac,errTablename)
 							async.waterfall([
 								function(callback){
 									var res1=results[i-1],res2=results[i]
-									query(util.format('INSERT INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'error\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-										JSON.stringify(results[i-1].bandwidth),moment(Date.parse(results[i].nowtime)).format('YYYY-MM-DD HH:mm:ss'),results[i-1].id,results[i-1].devtype,moment(Date.parse(results[i-1].nowtime)).format('YYYY-MM-DD HH:mm:ss'),results[i-1].mac,results[i-1].time ,results[i-1].propid,results[i-1].wandev,results[i-1].landev,results[i-1].mem ,results[i-1].cdevlist ,results[i-1].softversion ,results[i-1].others),
+									query(util.format('INSERT INTO %s SET bandwidth=\'%s\',errtype=\'error\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
+										errTablename,JSON.stringify(results[i-1].bandwidth),moment(Date.parse(results[i].nowtime)).format('YYYY-MM-DD HH:mm:ss'),results[i-1].id,results[i-1].devtype,moment(Date.parse(results[i-1].nowtime)).format('YYYY-MM-DD HH:mm:ss'),results[i-1].mac,results[i-1].time ,results[i-1].propid,results[i-1].wandev,results[i-1].landev,results[i-1].mem ,results[i-1].cdevlist ,results[i-1].softversion ,results[i-1].others),
 										function(error,myresults,fields)
 										{
 											if(error)
@@ -209,8 +209,8 @@ function countErrByoneMacEveryday(query,mac,errTablename)
 									)
 								},
 								function(arg1,arg2, callback){
-									query(util.format('INSERT INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'restart\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-										JSON.stringify(arg2.bandwidth),moment(Date.parse(arg2.nowtime)).format('YYYY-MM-DD HH:mm:ss'),arg1.id,arg2.devtype,moment(Date.parse(arg2.nowtime)).format('YYYY-MM-DD HH:mm:ss'),arg2.mac,arg2.time ,arg2.propid,arg2.wandev,arg2.landev,arg2.mem ,arg2.cdevlist ,arg2.softversion ,arg2.others),
+									query(util.format('INSERT INTO %s SET bandwidth=\'%s\',errtype=\'restart\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
+										errTablename,JSON.stringify(arg2.bandwidth),moment(Date.parse(arg2.nowtime)).format('YYYY-MM-DD HH:mm:ss'),arg1.id,arg2.devtype,moment(Date.parse(arg2.nowtime)).format('YYYY-MM-DD HH:mm:ss'),arg2.mac,arg2.time ,arg2.propid,arg2.wandev,arg2.landev,arg2.mem ,arg2.cdevlist ,arg2.softversion ,arg2.others),
 										function(error,myresults1,fields)
 											{
 												if(error)
