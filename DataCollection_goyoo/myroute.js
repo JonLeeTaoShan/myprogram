@@ -17,7 +17,8 @@ var 	config = require('./config'),
 	autoCreatandInsertShopTB=  require('./autoJob').autoCreatandInsertShopTB,
 	scheduleDelDataFromSQL=  require('./autoJob').scheduleDelDataFromSQL,
 	handlelastOnlineByShopID = require('./outputAPI').handlelastOnlineByShopID,
-	getShoptbandShopidbyname= require('./outputAPI').getShoptbandShopidbyname;
+	getShoptbandShopidbyname= require('./outputAPI').getShoptbandShopidbyname,
+	scheduleCountEverydayError = require('./autoJob').scheduleCountEverydayError;
 //	client;
 	var dataCollection; 
 	var databaseuser;
@@ -145,104 +146,20 @@ function update(req,res)
 	)
 	req.on('end',function()
 			{
-				//post =querystring.parse(post);
-				//post = JSON.stringify(post);
-				//req.body.data.app.use(express.bodyParser(post));
 				post = JSON.parse(post);
-				//获取当前时间戳
-				var mynow=new Date();
-				var timestamp1= Date.parse(mynow)/1000;
-				now= moment(mynow).format('YYYY-MM-DD HH:mm:ss');
-				
 				if (!(post.others))
 					post.others="";
-				//client.query('INSERT INTO dev_upload_tb SET devtype=\'%s\',nowtime=NOW(), mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-				//	post.devtype,post.mac,post.time ,JSON.stringify(post.propid) ,post.wandev ,JSON.stringify(post.wandev) ,post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others);
-			//	console.log('INSERT INTO dev_upload_tb SET devtype=\'%s\',nowtime=NOW(), mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-				//	post.devtype,post.mac,post.time ,JSON.stringify(post.propid) ,JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others);
-				query(  
-					  util.format("select * from upload_db.dev_upload_tb where nowtime = (select max(nowtime) from upload_db.dev_upload_tb where mac = %s) and mac = %s;",parseInt("0x"+post.mac, 16),parseInt("0x"+post.mac, 16)),  
-						function selectCb(error, results, fields) 
-						{  
-							if(error) 
-							{
-								console.log("ClientReady Error: " + error.message);
-								return;
-							}
-
-							query(util.format('INSERT INTO dev_upload_tb SET bandwidth=\'%s\',devtype=\'%s\',nowtime=\'%s\', mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-									JSON.stringify(post.bandwidth),post.devtype,now,parseInt("0x"+post.mac, 16),post.time ,JSON.stringify(post.propid) ,JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others),
-								function selectCb(error, results,fields) {
-								      if(error) {
-								        console.log("ClientReady Error: " + error.message);
-								        return;
-								      }
-								      console.log('Inserted: ' + results.affectedRows + ' row.');
-							      console.log('Id inserted: ' + results.insertId);
-							    }
-							);
-							//console.log(post);
-							res.send('This my test.');
-							//数据非第一次。
-							if(results)
-							{
-								if (results.length>1)
-								{
-									console.log("mac = %s updata lasttime > 1 ,results.length=%d",results.mac,results.length);
-									return;
-								}
-								if (results[0])
-								{
-									var lasttime = Date.parse(results[0].nowtime)/1000;
-									//大于10秒小于7分钟认为是正常的，否则数据异常产生报警。
-									if (((timestamp1 - lasttime)>10)&&((timestamp1 - lasttime)<420) )
-										console.log('mac = %s updata statue is succeed!last time is %s,timestamp1 - lasttime=%d ',results[0].mac.toString(16),results[0].nowtime,timestamp1 - lasttime);
-									else
-									{
-										console.log('mac = %s updata statue is error!last time is %s,timestamp1=%d, lasttime=%d ',results[0].mac.toString(16),results[0].nowtime,timestamp1 ,lasttime);
-										//把最近一次有效数据存入数据库dev_upload_offline_tb errtype=error
-										query(util.format('REPLACE INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'error\',erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-												JSON.stringify(results[0].bandwidth),now,results[0].id,results[0].devtype,moment(Date.parse(results[0].nowtime)).format('YYYY-MM-DD HH:mm:ss'),results[0].mac,results[0].time ,results[0].propid,results[0].wandev,results[0].landev,results[0].mem ,results[0].cdevlist ,results[0].softversion ,results[0].others),
-											function selectCb(error, results,fields) {
-											      if(error) {
-											        console.log("ClientReady Error: " + error.message);
-											        return;
-											      }
-												console.log('dev_upload_offline_tb Inserted: ' + results.affectedRows + ' row.');
-												console.log('dev_upload_offline_tb Id inserted: ' + results.insertId);
-											}
-										);
-										//把本次正常状态存入数据库dev_upload_offline_tb，errtype=restart .同时id=0.
-										query(util.format('REPLACE INTO dev_upload_offline_tb SET bandwidth=\'%s\',errtype=\'restart\', erruptime=\'%s\',id=%d, devtype=\'%s\',nowtime=\'%s\', mac=%d, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
-												JSON.stringify(post.bandwidth),now,0,post.devtype,now,parseInt("0x"+post.mac, 16),post.time ,JSON.stringify(post.propid),JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others),
-											function selectCb(error, results,fields) {
-											      if(error) {
-											        console.log("ClientReady Error: " + error.message);
-											        return;
-											      }
-												console.log('dev_upload_offline_tb Inserted: ' + results.affectedRows + ' row.');
-												console.log('dev_upload_offline_tb Id inserted: ' + results.insertId);
-											}
-										);
-									}
-
-								}
-								//没有任何记录，证明是数据第一次到达。
-								else
-								{
-									//不做处理
-									console.log("new data by this mac=%s",post.mac);
-								}
-							}
-							//没有任何记录，证明是数据第一次到达。
-							else
-							{
-								//不做处理
-								console.log("new data by this mac=%s",post.mac);
-							}
-						}  
-					);
-
+				query(util.format('INSERT INTO dev_upload_tb SET bandwidth=\'%s\',devtype=\'%s\',nowtime=NOW(), mac=%s, time=%s, propid=\'%s\', wandev=\'%s\', landev=\'%s\',  mem=\'%s\',  cdevlist=\'%s\',  softversion=\'%s\',  others=\'%s\'',
+						JSON.stringify(post.bandwidth),post.devtype,parseInt("0x"+post.mac, 16),post.time ,JSON.stringify(post.propid) ,JSON.stringify(post.wandev),JSON.stringify(post.landev),post.mem ,JSON.stringify(post.cdevlist ),post.softversion ,post.others),
+					function selectCb(error, results,fields) {
+					      if(error) {
+					        console.log("ClientReady Error: " + error.message);
+					        return;
+					      }
+				      console.log('update inserted succeed mac: %s.' , post.mac);
+				    }
+				);
+				res.send("ok");  
 			}
 	)
 }
@@ -261,7 +178,7 @@ function updateGetError(req,res)
 	}
 	else
 		req.query.limit="0,100"
-	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by mac DESC ,nowtime ASC limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
+	var cmdStr =util.format("mysql -u%s -p%s -e 'select * from upload_db.dev_upload_offline_tb where nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by mac DESC ,id ASC limit %d,%d;'  -H",databaseuser,databasepasswd,fromnow,fromnow,(req.query.limit.match(/\d+,/))[0].match(/\d+/)[0],length);
 	exec(cmdStr,
 		{
 			encoding: 'utf8',
@@ -382,10 +299,10 @@ function getDatabassInfo()
 	return "hah";
 
 }
-function mytest(req,res)
+function forceCountErrByoneMacEveryday(req,res)
 {
-	testdataname(query);
-	res.send("testdataname test");
+	scheduleCountEverydayError(query);
+	res.send("scheduleCountEverydayError");
 }
 function flashShopTB(req,res)
 {
@@ -462,7 +379,7 @@ function myroute (app)
 	app.get('/'+midurl+'/updateGetAllByMac',updateGetAllByMac);
 	app.get('/'+midurl+'/sendEmailTousers',sendEmail);
 	app.get('/'+midurl+'/testofflineByMac',testofflineByMac);
-	app.get('/'+midurl+'/testdataname',mytest);
+	app.get('/'+midurl+'/forceCountErrByoneMacEveryday',forceCountErrByoneMacEveryday);
 	app.get('/'+midurl+'/flashShopTB',flashShopTB);
 	app.get('/'+midurl+'/getDevstat',getDevstatByShopID);
 	app.get('/'+midurl+'/lastOnlineByShopID',lastOnlineByShopID);

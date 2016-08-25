@@ -103,8 +103,13 @@ local res = 0
 local i=10                     
 while (i > 0 and res ~= 200) 
 do                               
-        res = Entry()      
-        print(res)                     
+	res = Entry()
+	if res == nil then     
+		https = require "socket.http"
+	end                      
+	res = Entry()      
+	print(res)                     
+	https = require "ssl.https"                  
         i = i -1               
         nixio.nanosleep(1, 0)    
 end 

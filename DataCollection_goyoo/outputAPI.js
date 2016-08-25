@@ -1,7 +1,7 @@
 ﻿var util		= require('util'),
 	moment	= require("moment"),
 	data	= require('date-utils'),
-	getStringbyhttp1= require('./autoJob').getStringbyhttp1,
+	getStringbyhttp1= require('./func').getStringbyhttp1,
 	exec = require('child_process').exec,
 	cheerio = require('cheerio'),
 	config = require('./config'),
@@ -30,7 +30,7 @@ function lastOnlineByMac(query,mac,father,callback)
 }
 function offlineByMac(query,mac,fromnow,callback)
 {
-	query(util.format("select unix_timestamp(nowtime) nowtime,errtype from upload_db.dev_upload_offline_tb where mac=%d and nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by nowtime ASC;",parseInt("0x"+mac.replace(/:/g,''), 16),fromnow,fromnow),  
+	query(util.format("select unix_timestamp(nowtime) nowtime,errtype from upload_db.dev_upload_offline_tb where mac=%d and nowtime >DATE_SUB(now(), INTERVAL (1+%d) DAY)and nowtime < DATE_SUB(now(), INTERVAL (0+%d) DAY) order by id ASC,nowtime ASC;",parseInt("0x"+mac.replace(/:/g,''), 16),fromnow,fromnow),  
 		function selectCb(error, results, fields) 
 		{  
 			if(error) 
@@ -214,19 +214,6 @@ function offlineByShopIDAPIChin(query,shopTB,shopID,fromnow,callback)
 		}
 	);
 }
-function testdataname(query)
-{
-	query(" INSERT INTO upload_db.shop_by_channelID SET channelID='56383114a993d04421323a83',name='西贝莜面村;",
-	//client.query("select * from upload_db.shop_by_channelID;",
-		function selectCb(error, results,fields) {
-			if(error) {
-				console.log("ClientReady Error: " + error.message);
-				return;
-			}
-			console.log(results);
-		 }
-	)
-}
 function getMaclistByShopID(query,shopTB,shopID,callback)
 {
 	query(util.format(" select * from upload_db.%s where shopID=\'%s\'; ",shopTB,shopID),
@@ -354,7 +341,6 @@ function handlelastOnlineByShopID(query,shopTB,shopid,callback)
 		}
 	)
 }
-module.exports.testdataname = testdataname;
 module.exports.offlineByMacAPI = offlineByMacAPI;
 module.exports.offlineByShopIDAPI = offlineByShopIDAPI;
 module.exports.offlineByShopIDAPIChin = offlineByShopIDAPIChin;
