@@ -36,8 +36,7 @@ CREATE TABLE `dev_upload_offline_tb` (
   `softversion` char(20) DEFAULT NULL,
   `others` varchar(128) DEFAULT NULL,
   `erruptime` datetime DEFAULT NULL,
-  `errtype` char(10) DEFAULT NULL,
-  UNIQUE KEY `nowtime` (`nowtime`,`mac`,`id`)
+  `errtype` char(10) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- ----------------------------
