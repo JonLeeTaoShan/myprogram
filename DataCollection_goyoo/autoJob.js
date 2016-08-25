@@ -66,8 +66,8 @@ function scheduleDelDataFromSQL(query)
 {
 	var schedule = require('node-schedule');
 	var rule = new schedule.RecurrenceRule();
-	//00:20:00
-	rule.hour =0;rule.minute =20;rule.second =0;
+	//00:23:00
+	rule.hour =0;rule.minute =23;rule.second =0;
 	var j = schedule.scheduleJob(rule, function(){
 		console.log("clear SQL: now is %s.",new Date());
 	query(util.format(" DELETE  from upload_db.dev_upload_tb where nowtime < DATE_SUB(now(), INTERVAL 1 MONTH); "),
@@ -101,8 +101,8 @@ function scheduleDelDataFromSQL(query)
 		autoCreatandInsertShopTB(query);
 	});
 	var rule2 = new schedule.RecurrenceRule();
-	//00:50:00
-	rule2.hour =0;rule2.minute =50;rule2.second =0;
+	//00:53:00
+	rule2.hour =0;rule2.minute =53;rule2.second =0;
 	var jj=schedule.scheduleJob(rule2, function(){
 		scheduleCountEverydayError(query);
 		}
